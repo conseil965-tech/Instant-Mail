@@ -1,0 +1,6 @@
+{
+  "name": "InstantMail",
+  "description": "Service d'email temporaire premium, gratuit et anonyme pour se protéger du spam.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

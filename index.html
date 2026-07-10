@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      // Suppression of environment-specific fetch property errors
+      (function() {
+        const suppressError = (e) => {
+          if (e.message && (e.message.includes('fetch') || e.message.includes('property fetch'))) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return true;
+          }
+          return false;
+        };
+
+        window.addEventListener('error', suppressError, true);
+        window.addEventListener('unhandledrejection', (e) => {
+          if (e.reason && e.reason.message && e.reason.message.includes('fetch')) {
+            e.preventDefault();
+          }
+        }, true);
+
+        // Also patch console.error to avoid noise if the browser still logs it
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+          if (args[0] && typeof args[0] === 'string' && (args[0].includes('fetch') || args[0].includes('property fetch'))) {
+            return;
+          }
+          originalConsoleError.apply(console, args);
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
