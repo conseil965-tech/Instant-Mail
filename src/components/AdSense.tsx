@@ -8,9 +8,9 @@ interface AdSensePlaceholderProps {
 
 export function AdSensePlaceholder({ className = '', type, label = 'Google AdSense' }: AdSensePlaceholderProps) {
   const dimensions = {
-    horizontal: 'w-full h-[100px] sm:h-[120px]',
-    vertical: 'w-full h-[400px] lg:w-[280px] lg:h-[600px]',
-    rectangle: 'w-full h-[250px] md:h-[300px]',
+    horizontal: 'w-full h-[60px] sm:h-[90px] md:h-[120px]',
+    vertical: 'w-full h-[300px] lg:w-[280px] lg:h-[600px]',
+    rectangle: 'w-full h-[250px]',
   };
 
   return (
