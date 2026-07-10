@@ -1,10 +1,19 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { motion } from 'motion/react';
-import { Mail, RefreshCw, Trash2, Copy, Check, ChevronRight, Loader2, X, ChevronDown, AlertCircle } from 'lucide-react';
+import { 
+  Mail, 
+  Copy, 
+  RefreshCw, 
+  Trash2, 
+  Loader2, 
+  ChevronRight, 
+  ChevronDown,
+  Settings,
+  Globe,
+  Moon,
+  Sun,
+  Check,
+  X
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback } from 'react';
 import { mailTmService } from './lib/mail-tm';
 import { Account, Message, FAQItem } from './types';
@@ -12,20 +21,32 @@ import { AdSensePlaceholder } from './components/AdSense';
 
 const FAQ_DATA: FAQItem[] = [
   {
-    question: "Qu'est-ce qu'un email temporaire jetable ?",
-    answer: "Un e-mail temporaire est une boîte aux lettres éphémère qui s'autodétruit après un certain temps. Elle vous permet de vous inscrire sur des sites web sans divulguer votre véritable identité."
+    question: "Qu'est-ce qu'un email temporaire gratuit ?",
+    answer: "Un email temporaire gratuit est un moyen sécurisé et anonyme d'agir en ligne sans risquer votre email réel. Idéal pour les inscriptions, téléchargements ou connexions sans spam ni problèmes de confidentialité. Sans données personnelles ni inscription requises, vous pouvez recevoir emails et pièces jointes. Les messages sont supprimés automatiquement, sans laisser de trace."
   },
   {
-    question: "Est-ce que ce service est gratuit ?",
-    answer: "Oui, notre service est 100% gratuit, anonyme et ne nécessite aucune inscription préalable."
+    question: "Quelle est la durée d'un email temporaire ?",
+    answer: "Votre adresse est active tant que vous gardez votre session ouverte. Notre système est conçu pour un usage éphémère et sécurisé."
   },
   {
-    question: "Combien de temps les emails restent-ils actifs ?",
-    answer: "Tant que vous gardez cette page ouverte, l'adresse reste active pour recevoir tous vos codes de validation ou liens de confirmation."
+    question: "Puis-je choisir ma propre adresse temporaire ?",
+    answer: "Oui, notre système vous permet de générer des adresses aléatoires ou de rafraîchir pour en obtenir une nouvelle instantanément."
+  },
+  {
+    question: "Est-ce sûr d'utiliser un email temporaire pour s'inscrire ?",
+    answer: "Absolument. C'est l'un des meilleurs moyens de protéger votre boîte mail principale du spam et des fuites de données potentielles sur des sites tiers."
+  },
+  {
+    question: "Combien d'emails temporaires puis-je créer ?",
+    answer: "Il n'y a pas de limite stricte. Vous pouvez générer autant de nouvelles adresses que nécessaire pour vos besoins de navigation."
   }
 ];
 
 export default function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('mails_org_theme');
+    return (saved as 'light' | 'dark') || 'dark';
+  });
   const [account, setAccount] = useState<Account | null>(() => {
     const saved = localStorage.getItem('instantmail_account');
     return saved ? JSON.parse(saved) : null;
@@ -36,44 +57,29 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [retryAfter, setRetryAfter] = useState<number>(0);
   const [copied, setCopied] = useState(false);
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
   useEffect(() => {
-    if (account) {
-      localStorage.setItem('instantmail_account', JSON.stringify(account));
+    localStorage.setItem('mails_org_theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
-  }, [account]);
+  }, [theme]);
 
-  const loadMessages = useCallback(async (token: string) => {
-    if (retryAfter > 0) return;
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const initAccount = useCallback(async () => {
     try {
-      const msgs = await mailTmService.getMessages(token);
-      setMessages(msgs);
+      setIsLoading(true);
       setError(null);
-    } catch (err: any) {
-      console.error('Error loading messages:', err);
-      if (err.response?.status === 429) {
-        setError('Limite de requêtes atteinte. Pause automatique de 30s.');
-        setRetryAfter(30);
-      } else {
-        setError('Erreur de connexion au serveur.');
-      }
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [retryAfter]);
-
-  const createAccount = async () => {
-    if (account) return;
-    setIsLoading(true);
-    setError(null);
-    try {
       const domains = await mailTmService.getDomains();
-      if (!domains || domains.length === 0) {
-        throw new Error('Aucun domaine disponible');
-      }
+      if (!domains || domains.length === 0) throw new Error('No domains available');
+      
       const domain = domains[0].domain;
       const username = Math.random().toString(36).substring(2, 12);
       const password = Math.random().toString(36).substring(2, 15);
@@ -96,45 +102,50 @@ export default function App() {
       };
 
       setAccount(newAccount);
+      localStorage.setItem('instantmail_account', JSON.stringify(newAccount));
       setMessages([]);
     } catch (err: any) {
-      console.error('Error creating account:', err);
-      if (err.response?.status === 429) {
-        setError('Trop de requêtes. Veuillez réessayer dans quelques minutes.');
-      } else {
-        setError('Échec de la création de l\'email. Veuillez actualiser.');
-      }
+      setError(err.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!account) {
-      createAccount();
+      initAccount();
+    }
+  }, [account, initAccount]);
+
+  const fetchMessages = useCallback(async () => {
+    if (!account?.token) return;
+    try {
+      const newMessages = await mailTmService.getMessages(account.token);
+      setMessages(newMessages);
+    } catch (err: any) {
+      console.error('Error fetching messages:', err);
     }
   }, [account]);
 
   useEffect(() => {
-    if (retryAfter > 0) {
-      const timer = setInterval(() => {
-        setRetryAfter((prev) => Math.max(0, prev - 1));
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [retryAfter]);
+    if (!account?.token) return;
+    const interval = setInterval(fetchMessages, 15000);
+    fetchMessages();
+    return () => clearInterval(interval);
+  }, [account, fetchMessages]);
 
-  useEffect(() => {
-    if (account?.token && retryAfter === 0) {
-      const interval = setInterval(() => {
-        if (document.visibilityState === 'visible') {
-          loadMessages(account.token!);
-        }
-      }, 15000);
-      loadMessages(account.token!);
-      return () => clearInterval(interval);
-    }
-  }, [account?.token, loadMessages, retryAfter]);
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchMessages();
+    setTimeout(() => setIsRefreshing(false), 800);
+  };
+
+  const handleDelete = () => {
+    localStorage.removeItem('instantmail_account');
+    setAccount(null);
+    setMessages([]);
+    initAccount();
+  };
 
   const copyToClipboard = () => {
     if (account?.address) {
@@ -150,34 +161,21 @@ export default function App() {
       const msg = await mailTmService.getMessage(id, account.token);
       setSelectedMessage(msg);
       setIsModalOpen(true);
-    } catch (error) {
-      console.error('Error loading message details:', error);
+    } catch (err) {
+      console.error('Error opening message:', err);
     }
-  };
-
-  const handleRefresh = () => {
-    if (account?.token) {
-      setIsRefreshing(true);
-      loadMessages(account.token);
-    }
-  };
-
-  const handleDelete = () => {
-    setAccount(null);
-    setMessages([]);
-    localStorage.removeItem('instantmail_account');
-    setError(null);
-    setRetryAfter(0);
   };
 
   return (
-    <div className="relative min-h-screen bg-bg-dark overflow-hidden">
+    <div className={`relative min-h-screen transition-colors duration-500 font-sans selection:bg-blue-500/30 ${
+      theme === 'dark' ? 'bg-[#0a0c10] text-slate-300' : 'bg-slate-50 text-slate-600'
+    }`}>
       {/* Background Video */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div 
-          initial={{ scale: 1.2, opacity: 0 }}
-          animate={{ scale: 1.1, opacity: 0.7 }}
-          transition={{ duration: 2.5, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: theme === 'dark' ? 0.35 : 0.15 }}
+          transition={{ duration: 2.5 }}
           className="w-full h-full"
         >
           <video
@@ -185,357 +183,408 @@ export default function App() {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover scale-105"
           >
             <source src="https://res.cloudinary.com/ensdqbmy/video/upload/v1783680734/Icy_blue_envelope_rotates_spins_202607100944_vrkyfh.mp4" type="video/mp4" />
           </video>
         </motion.div>
-        
-        {/* Dynamic Overlays for depth and readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-bg-dark/80 via-bg-dark/40 to-bg-dark/90 backdrop-blur-[3px]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
+        <div className={`absolute inset-0 transition-colors duration-500 ${
+          theme === 'dark' 
+            ? 'bg-gradient-to-b from-[#0a0c10]/95 via-[#0a0c10]/60 to-[#0a0c10]' 
+            : 'bg-gradient-to-b from-white/90 via-white/40 to-white'
+        }`}></div>
       </div>
 
-      {/* Abstract Background Elements (Backups/Accents) */}
-      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-purple-600/15 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
-      <div className="absolute bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[150px] pointer-events-none"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-      {/* Navbar */}
-      <nav className="relative z-50 px-6 md:px-12 py-8 flex justify-between items-center max-w-7xl mx-auto">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3"
-        >
-          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/40 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-            <Mail className="text-white" size={28} />
-          </div>
-          <span className="text-2xl font-black tracking-tighter text-white">
-            Instant<span className="text-indigo-400">Mail</span>
+      {/* Header Navigation */}
+      <header className="relative z-50 max-w-6xl mx-auto px-6 py-10 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <img 
+            src="/logo.jpg" 
+            alt="Mails.org Logo" 
+            className="w-12 h-12 rounded-xl shadow-2xl shadow-blue-500/20"
+            referrerPolicy="no-referrer"
+          />
+          <span className={`text-2xl font-bold tracking-tight transition-colors ${
+            theme === 'dark' ? 'text-white' : 'text-slate-900'
+          }`}>
+            Mails<span className="text-blue-400">.org</span>
           </span>
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-4"
-        >
-          <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 shadow-lg">
-            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
-            <span className="text-[11px] font-black text-green-400 uppercase tracking-[0.2em]">Secure Node 01</span>
+        </div>
+        
+        <div className={`flex items-center gap-4 backdrop-blur-xl px-4 py-2 rounded-full border shadow-lg transition-all ${
+          theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'
+        }`}>
+          <div 
+            onClick={toggleTheme}
+            className={`flex items-center gap-2 px-2 cursor-pointer transition-colors ${
+              theme === 'dark' ? 'hover:text-white' : 'hover:text-slate-900'
+            }`}
+          >
+            {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} className="text-amber-500" />}
+            <div className={`w-8 h-4 rounded-full relative transition-colors ${
+              theme === 'dark' ? 'bg-white/10' : 'bg-black/10'
+            }`}>
+              <motion.div 
+                animate={{ x: theme === 'dark' ? 16 : 0 }}
+                className={`absolute left-1 top-1 w-2 h-2 rounded-full transition-colors ${
+                  theme === 'dark' ? 'bg-white' : 'bg-blue-500'
+                }`}
+              />
+            </div>
           </div>
-        </motion.div>
-      </nav>
+          <div className={`w-px h-4 ${theme === 'dark' ? 'bg-white/10' : 'bg-black/10'}`}></div>
+          <div className={`flex items-center gap-2 px-2 text-xs font-bold transition-colors cursor-pointer ${
+            theme === 'dark' ? 'text-white' : 'text-slate-900'
+          }`}>
+            <Globe size={14} />
+            <span>FR French</span>
+            <ChevronDown size={14} />
+          </div>
+        </div>
+      </header>
 
-      {/* Ad: Under Header */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 mb-12">
+      {/* Ad: Top */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 mb-16">
         <AdSensePlaceholder type="horizontal" />
       </div>
 
-      {/* Hero Section */}
-      <main className="relative z-10 px-6 md:px-12 py-12 text-center overflow-visible">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-20"
-        >
-          <h1 className="text-5xl md:text-7xl font-black tracking-tightest mb-6 text-white leading-none">
-            Your Private <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Digital Shield</span>
-          </h1>
-          <p className="text-text-muted text-xl max-w-2xl mx-auto leading-relaxed font-medium">
-            Generate instant disposable email addresses. Protect your identity, block tracking, and experience a cleaner internet.
-          </p>
-
-          {/* Ad: After First Paragraph */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <AdSensePlaceholder type="horizontal" label="Google AdSense - Priority Placement" />
-          </div>
-        </motion.div>
-
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start text-left">
-          {/* Main content grid col */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-12">
-            {/* Main Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="glass rounded-[48px] p-8 md:p-16 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/5"
-            >
-          {/* Email Display */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8 p-5 bg-red-500/10 border border-red-500/20 rounded-3xl text-red-400 text-sm font-bold flex items-center justify-center gap-3"
-            >
-              <AlertCircle size={20} />
-              {error}
-            </motion.div>
-          )}
-          
-          <div className="group relative bg-black/40 border border-white/10 rounded-[32px] p-3 mb-10 shadow-2xl transition-all duration-500 hover:border-indigo-500/30 hover:bg-black/60">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-[36px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <input
-              type="text"
-              readOnly
-              value={isLoading ? "SECURELY GENERATING..." : account?.address || ""}
-              className="relative w-full bg-transparent border-none outline-none px-8 py-6 text-3xl md:text-4xl font-mono font-black text-indigo-200 text-center tracking-tight"
-              placeholder="INITIALIZING..."
-            />
+      <main className="relative z-10 max-w-6xl mx-auto px-6 pb-32">
+        {/* Hero Section */}
+        <div className="grid lg:grid-cols-2 gap-16 items-start mb-24">
+          <div className="text-left pt-2">
+            <h1 className={`text-3xl md:text-4xl font-bold mb-6 tracking-wide uppercase leading-tight transition-colors ${
+              theme === 'dark' ? 'text-white' : 'text-slate-900'
+            }`}>
+              Email Temporaire Gratuit
+            </h1>
+            <p className={`text-base leading-relaxed max-w-md mb-8 transition-colors ${
+              theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+            }`}>
+              Bouclier de confidentialité en ligne. Obtenez instantanément des adresses email temporaires, sûres et anonymes. Idéal pour s'inscrire sans exposer votre email réel, éviter le spam et protéger votre vie privée.
+            </p>
           </div>
 
           {/* Action Bar */}
-          <div className="flex flex-wrap justify-center gap-5 mb-16">
-            <button
-              onClick={copyToClipboard}
-              disabled={isLoading || !account}
-              className="flex items-center gap-3 px-8 py-5 bg-indigo-600 rounded-[24px] text-white font-black hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-indigo-600/20"
-            >
-              {copied ? <Check size={22} /> : <Copy size={22} />}
-              {copied ? "COPIED" : "COPY ADDRESS"}
-            </button>
-            <button
-              onClick={handleRefresh}
-              disabled={isLoading || isRefreshing}
-              className="px-8 py-5 bg-white/5 border border-white/10 rounded-[24px] text-white font-black hover:bg-white/10 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
-            >
-              <RefreshCw size={22} className={`${isRefreshing ? "animate-spin" : "text-indigo-400"}`} />
-              REFRESH
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={isLoading}
-              className="px-8 py-5 bg-white/5 border border-white/10 rounded-[24px] text-white font-black hover:bg-red-500/10 hover:border-red-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 group"
-            >
-              <Trash2 size={22} className="text-red-400 group-hover:scale-110 transition-transform" />
-              NEW SESSION
-            </button>
-          </div>
-
-          {/* Ad: Middle of Content */}
-          <div className="mb-16">
-            <AdSensePlaceholder type="rectangle" label="Google AdSense - Engagement Block" />
-          </div>
-
-          {/* Inbox Area */}
-          <div className="text-left border-t border-white/5 pt-16">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
-              <h2 className="text-3xl font-black text-white flex items-center gap-4">
-                <div className="w-1.5 h-8 bg-indigo-500 rounded-full"></div>
-                Incoming Feed
-              </h2>
-              <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-2xl border border-white/5 shadow-inner">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Status</span>
-                  <span className="text-xs text-white font-mono">
-                    {retryAfter > 0 ? `RETRYING IN ${retryAfter}S` : "LISTENING..."}
-                  </span>
-                </div>
-                <div className="w-px h-8 bg-white/10"></div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Count</span>
-                  <span className="text-xs text-indigo-400 font-black">{messages.length} ACTIVE</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="min-h-[300px] relative">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 text-text-muted">
-                  <div className="relative w-20 h-20 mb-6">
-                    <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                  <p className="font-black tracking-widest text-xs uppercase">Establishing Encrypted Tunnel</p>
-                </div>
-              ) : messages.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col items-center justify-center py-24 text-text-muted text-center bg-white/[0.02] border-2 border-dashed border-white/5 rounded-[32px]"
-                >
-                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                    <Mail size={40} className="opacity-20" />
-                  </div>
-                  <p className="font-bold text-lg text-white/40 italic">Waiting for the first incoming packet...</p>
-                </motion.div>
-              ) : (
-                <div className="grid grid-cols-1 gap-5">
-                  {messages.map((msg, index) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="group relative flex justify-between items-center bg-white/[0.03] border border-white/5 hover:bg-white/10 hover:border-white/10 p-8 rounded-[32px] cursor-pointer transition-all duration-500 shadow-xl overflow-hidden"
-                      onClick={() => openMessage(msg.id)}
-                    >
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <div className="flex items-center gap-8">
-                        <div className="w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center text-indigo-300 font-black text-2xl border border-indigo-500/20 shadow-lg">
-                          {msg.from.name ? msg.from.name[0].toUpperCase() : 'M'}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <span className="font-black text-white text-xl tracking-tight group-hover:text-indigo-300 transition-colors">
-                            {msg.subject || '(No Subject)'}
-                          </span>
-                          <span className="text-sm font-medium text-text-muted">
-                            <span className="opacity-50">From:</span> <span className="text-indigo-400/70">{msg.from.address}</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 text-indigo-400 font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
-                        Decrypt
-                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                          <ChevronRight size={20} />
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Sidebar Ad (Visible only on desktop) */}
-      <aside className="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-12">
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="space-y-8"
-        >
-          <div className="bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-2xl">
-            <h4 className="text-xs font-black text-text-muted uppercase tracking-[0.3em] mb-6">Security Partner</h4>
-            <AdSensePlaceholder type="vertical" label="Google AdSense - Sidebar Premium" />
-          </div>
-          <AdSensePlaceholder type="rectangle" label="Google AdSense - Sidebar Secondary" />
-        </motion.div>
-      </aside>
-    </div>
-  </main>
-
-  {/* Ad: Before Footer */}
-  <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-    <AdSensePlaceholder type="horizontal" label="Google AdSense - Bottom" />
-  </div>
-
-  {/* FAQ Section */}
-      <section className="relative z-10 max-w-4xl mx-auto py-32 px-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tightest uppercase">Common Inquiries</h2>
-          <p className="text-text-muted font-medium">Everything you need to know about our secure temporary mail service.</p>
-        </motion.div>
-        
-        <div className="space-y-6">
-          {FAQ_DATA.map((item, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className={`glass rounded-[32px] overflow-hidden transition-all duration-500 border border-white/5 ${
-                activeFaq === idx ? 'ring-2 ring-indigo-500/30 bg-white/[0.07]' : 'hover:bg-white/[0.03]'
-              }`}
-            >
-              <button
-                onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                className="w-full flex justify-between items-center p-8 md:p-10 text-left font-black text-white transition-colors group"
+          <div className="space-y-6">
+            <div className={`flex items-center border rounded-2xl p-2 shadow-2xl group focus-within:border-blue-500/50 transition-all ${
+              theme === 'dark' ? 'bg-[#0d1117] border-white/10' : 'bg-white border-black/10'
+            }`}>
+              <input
+                type="text"
+                readOnly
+                value={isLoading ? "Génération de l'adresse..." : account?.address || ""}
+                className={`flex-1 bg-transparent border-none outline-none px-6 py-4 text-xl font-medium tracking-tight transition-colors ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                }`}
+              />
+              <button 
+                onClick={copyToClipboard}
+                className={`p-3 transition-colors ${
+                  theme === 'dark' ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                }`}
+                title="Copier"
               >
-                <span className="text-lg md:text-xl tracking-tight group-hover:text-indigo-300 transition-colors">{item.question}</span>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                  activeFaq === idx ? 'bg-indigo-500 text-white rotate-180' : 'bg-white/5 text-text-muted'
-                }`}>
-                  <ChevronDown size={20} />
-                </div>
+                <Copy size={24} />
               </button>
-              <div
-                className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                  activeFaq === idx ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <button 
+                onClick={copyToClipboard}
+                className="flex items-center justify-center gap-3 px-6 py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              >
+                {copied ? <Check size={20} /> : <Copy size={20} />}
+                <span className="text-sm uppercase tracking-wider">{copied ? "Copié !" : "Copier"}</span>
+              </button>
+              <button 
+                onClick={handleRefresh}
+                className={`flex items-center justify-center gap-3 px-6 py-4 border font-bold rounded-xl transition-all active:scale-95 ${
+                  theme === 'dark' 
+                    ? 'bg-white/5 hover:bg-white/10 border-white/10 text-white' 
+                    : 'bg-black/5 hover:bg-black/10 border-black/10 text-slate-900'
                 }`}
               >
-                <div className="p-8 md:p-10 pt-0 text-text-muted text-lg leading-relaxed border-t border-white/5 font-medium">
-                  {item.answer}
+                <Settings size={20} className={isRefreshing ? "animate-spin" : ""} />
+                <span className="text-sm uppercase tracking-wider">Paramètres</span>
+              </button>
+              <button 
+                onClick={handleDelete}
+                className={`flex items-center justify-center gap-3 px-6 py-4 border font-bold rounded-xl transition-all active:scale-95 ${
+                  theme === 'dark' 
+                    ? 'bg-white/5 hover:bg-white/10 border-white/10 text-white' 
+                    : 'bg-black/5 hover:bg-black/10 border-black/10 text-slate-900'
+                }`}
+              >
+                <Trash2 size={20} />
+                <span className="text-sm uppercase tracking-wider">Supprimer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="grid lg:grid-cols-12 gap-10 mb-24">
+          <div className="lg:col-span-8 space-y-10">
+            <div className={`backdrop-blur-3xl border rounded-3xl min-h-[600px] overflow-hidden flex flex-col shadow-2xl transition-all ${
+              theme === 'dark' ? 'bg-[#0d1117]/60 border-white/5' : 'bg-white/80 border-black/5'
+            }`}>
+              <div className={`flex items-center justify-between px-8 py-5 border-b transition-colors ${
+                theme === 'dark' ? 'border-white/5 bg-white/[0.02]' : 'border-black/5 bg-black/[0.02]'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <Mail size={18} className="text-blue-400" />
+                  <span className={`text-xs font-bold uppercase tracking-[0.2em] transition-colors ${
+                    theme === 'dark' ? 'text-white' : 'text-slate-900'
+                  }`}>Boîte de réception</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                  <span className={`text-[10px] uppercase font-black tracking-widest transition-colors ${
+                    theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                  }`}>En direct</span>
                 </div>
               </div>
-            </motion.div>
-          ))}
+              
+              <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
+                    <p className={`text-xs font-bold uppercase tracking-widest transition-colors ${
+                      theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                    }`}>Sécurisation du tunnel...</p>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="max-w-xs space-y-6">
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto transition-colors ${
+                      theme === 'dark' ? 'bg-white/5' : 'bg-black/5'
+                    }`}>
+                      <Mail size={32} className={theme === 'dark' ? 'text-slate-700' : 'text-slate-300'} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className={`text-xl font-bold transition-colors ${
+                        theme === 'dark' ? 'text-white' : 'text-slate-900'
+                      }`}>En attente emails</h3>
+                      <p className={`text-sm leading-relaxed transition-colors ${
+                        theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                      }`}>Les nouveaux messages apparaîtront automatiquement ici.</p>
+                    </div>
+                    <div className={`flex items-center justify-center gap-3 text-[10px] font-bold uppercase py-4 border-t transition-colors ${
+                      theme === 'dark' ? 'text-slate-600 border-white/5' : 'text-slate-400 border-black/5'
+                    }`}>
+                      <span className="tracking-widest">Nettoyage automatique actif</span>
+                      <Settings size={14} className="opacity-50" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full space-y-3 px-4">
+                    {messages.map((msg, idx) => (
+                      <motion.div 
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className={`p-6 rounded-2xl cursor-pointer transition-all border flex justify-between items-center group shadow-lg ${
+                          theme === 'dark' 
+                            ? 'bg-white/[0.03] hover:bg-white/[0.06] border-transparent hover:border-white/10' 
+                            : 'bg-black/[0.02] hover:bg-black/[0.04] border-transparent hover:border-black/5'
+                        }`}
+                        onClick={() => openMessage(msg.id)}
+                      >
+                        <div className="text-left flex items-center gap-6">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold border transition-colors ${
+                            theme === 'dark' 
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                              : 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                          }`}>
+                            {msg.from.name ? msg.from.name[0].toUpperCase() : 'M'}
+                          </div>
+                          <div className="space-y-1">
+                            <div className={`font-bold text-lg group-hover:text-blue-400 transition-colors ${
+                              theme === 'dark' ? 'text-white' : 'text-slate-900'
+                            }`}>{msg.subject || "(Sans objet)"}</div>
+                            <div className={`text-xs font-medium transition-colors ${
+                              theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                            }`}>De: <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>{msg.from.address}</span></div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-[10px] font-bold uppercase tracking-widest hidden sm:block transition-colors ${
+                            theme === 'dark' ? 'text-slate-600' : 'text-slate-400'
+                          }`}>Consulter</span>
+                          <ChevronRight size={20} className={`transition-all group-hover:translate-x-1 ${
+                            theme === 'dark' ? 'text-slate-600 group-hover:text-blue-400' : 'text-slate-400 group-hover:text-blue-500'
+                          }`} />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <AdSensePlaceholder type="horizontal" label="Google AdSense - In-Feed Premium" />
+          </div>
+
+          <aside className="lg:col-span-4 space-y-10">
+            <div className="sticky top-10 space-y-10">
+              <AdSensePlaceholder type="vertical" label="Google AdSense - Sidebar" />
+              <div className={`border p-8 rounded-3xl space-y-6 backdrop-blur-md transition-all ${
+                theme === 'dark' ? 'bg-white/[0.02] border-white/5' : 'bg-black/[0.02] border-black/5'
+              }`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                  theme === 'dark' ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-500/10 text-blue-600'
+                }`}>
+                  <Mail size={20} />
+                </div>
+                <div className="space-y-2">
+                  <h4 className={`text-xs font-black uppercase tracking-[0.2em] transition-colors ${
+                    theme === 'dark' ? 'text-white' : 'text-slate-900'
+                  }`}>Conseil Sécurité</h4>
+                  <p className={`text-sm leading-relaxed font-medium transition-colors ${
+                    theme === 'dark' ? 'text-slate-500' : 'text-slate-600'
+                  }`}>Utilisez une adresse différente pour chaque site afin de tracer précisément l'origine des spams.</p>
+                </div>
+                <button className={`w-full py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  theme === 'dark' ? 'bg-white/5 hover:bg-white/10 text-slate-400' : 'bg-black/5 hover:bg-black/10 text-slate-600'
+                }`}>En savoir plus</button>
+              </div>
+            </div>
+          </aside>
         </div>
-      </section>
+
+        {/* FAQ Section */}
+        <section className="mb-32">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className={`text-2xl font-bold uppercase tracking-[0.3em] mb-4 transition-colors ${
+              theme === 'dark' ? 'text-white' : 'text-slate-900'
+            }`}>Questions Fréquemment Posées</h2>
+            <div className="w-20 h-1 bg-blue-500/30 mx-auto rounded-full"></div>
+          </motion.div>
+          
+          <div className="max-w-4xl mx-auto space-y-4">
+            {FAQ_DATA.map((item, idx) => (
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className={`border rounded-2xl overflow-hidden transition-all ${
+                  theme === 'dark' ? 'bg-white/[0.01] border-white/5 hover:bg-white/[0.02]' : 'bg-black/[0.01] border-black/5 hover:bg-black/[0.02]'
+                }`}
+              >
+                <button 
+                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+                  className="w-full flex items-center gap-6 p-8 text-left transition-colors group"
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${
+                    activeFaq === idx ? 'bg-blue-500 text-white rotate-180' : (theme === 'dark' ? 'bg-white/5 text-slate-600' : 'bg-black/5 text-slate-400')
+                  }`}>
+                    <ChevronDown size={18} />
+                  </div>
+                  <span className={`text-base font-bold group-hover:text-blue-500 transition-colors tracking-tight ${
+                    theme === 'dark' ? 'text-slate-300' : 'text-slate-700'
+                  }`}>{item.question}</span>
+                </button>
+                <AnimatePresence>
+                  {activeFaq === idx && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className={`px-20 pb-10 text-base leading-relaxed font-medium transition-colors ${
+                        theme === 'dark' ? 'text-slate-500' : 'text-slate-600'
+                      }`}
+                    >
+                      {item.answer}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="relative z-10 px-6 md:px-12 py-12 flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] text-slate-500 border-t border-white/5 bg-black/40 backdrop-blur-3xl">
-        <div className="flex flex-wrap justify-center gap-8 uppercase tracking-[0.3em] font-black">
-          <span className="hover:text-white transition-colors cursor-default flex items-center gap-2">
-            <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
-            AES-256 Encryption
-          </span>
-          <span className="hover:text-white transition-colors cursor-default flex items-center gap-2">
-            <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
-            Zero-Log Policy
-          </span>
-          <span className="hover:text-white transition-colors cursor-default flex items-center gap-2">
-            <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
-            GDPR Compliant
-          </span>
+      <footer className={`relative z-10 max-w-6xl mx-auto px-6 py-12 border-t flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] font-bold uppercase tracking-[0.2em] transition-all ${
+        theme === 'dark' ? 'text-slate-600 border-white/5' : 'text-slate-400 border-black/5'
+      }`}>
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <span>© Copyright <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>Mails.org</span>. All Rights Reserved</span>
+          <div className={`hidden md:block w-px h-3 ${theme === 'dark' ? 'bg-white/10' : 'bg-black/10'}`}></div>
+          <span className="opacity-40">Privacy First Engine v2.4</span>
         </div>
-        <div className="flex flex-col items-center md:items-end gap-2">
-          <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
-            <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.8)] animate-pulse"></div>
-            <span className="uppercase tracking-[0.2em] font-black text-white">System Status: Optimal</span>
-          </div>
-          <span className="uppercase tracking-widest font-bold opacity-30 mt-2">© 2026 INSTANTMAIL LABS — QUANTUM PRIVACY ENGINE</span>
+        <div className="flex gap-8">
+          <a href="#" className={`transition-colors border-b border-transparent hover:border-blue-500 pb-1 ${
+            theme === 'dark' ? 'hover:text-white' : 'hover:text-slate-900'
+          }`}>Status page</a>
+          <a href="#" className={`transition-colors border-b border-transparent hover:border-blue-500 pb-1 ${
+            theme === 'dark' ? 'hover:text-white' : 'hover:text-slate-900'
+          }`}>Politique de confidentialité</a>
         </div>
       </footer>
 
-      {/* Message Modal */}
+      {/* Modal Message View */}
       {isModalOpen && selectedMessage && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-bg-dark/80 backdrop-blur-md"
+            className="absolute inset-0 bg-[#0a0c10]/90 backdrop-blur-2xl"
             onClick={() => setIsModalOpen(false)}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-4xl max-h-[90vh] glass rounded-[40px] shadow-2xl flex flex-col overflow-hidden"
+            className={`relative w-full max-w-5xl max-h-[85vh] border rounded-[40px] shadow-2xl flex flex-col overflow-hidden transition-colors ${
+              theme === 'dark' ? 'bg-[#0d1117] border-white/10' : 'bg-white border-black/10'
+            }`}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-start p-8 md:p-10 border-b border-white/10">
-              <div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-3">
-                  {selectedMessage.subject || '(No Subject)'}
+            <div className={`flex justify-between items-start p-10 border-b transition-colors ${
+              theme === 'dark' ? 'border-white/5 bg-white/[0.01]' : 'border-black/5 bg-black/[0.01]'
+            }`}>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="px-3 py-1 bg-blue-500/10 rounded-full text-[10px] font-black text-blue-400 uppercase tracking-widest border border-blue-500/20">
+                    Incoming Secure
+                  </div>
+                  <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${
+                    theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                  }`}>ID: {selectedMessage.id.substring(0, 8)}</span>
+                </div>
+                <h3 className={`text-3xl font-black tracking-tight leading-tight transition-colors ${
+                  theme === 'dark' ? 'text-white' : 'text-slate-900'
+                }`}>
+                  {selectedMessage.subject || '(Sans objet)'}
                 </h3>
-                <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
-                  <span className="font-bold text-indigo-400">From:</span>
-                  <span className="text-white font-semibold">{selectedMessage.from.name || selectedMessage.from.address}</span>
-                  <span className="opacity-40">&lt;{selectedMessage.from.address}&gt;</span>
+                <div className="flex flex-wrap items-center gap-4 text-sm font-medium">
+                  <span className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>Expéditeur:</span>
+                  <span className="text-blue-500">{selectedMessage.from.name || selectedMessage.from.address}</span>
+                  <span className={`opacity-30 text-xs transition-colors ${
+                    theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
+                  }`}>&lt;{selectedMessage.from.address}&gt;</span>
                 </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all text-white border border-white/10"
+                className={`p-4 rounded-2xl transition-all border shadow-lg group ${
+                  theme === 'dark' ? 'bg-white/5 hover:bg-white/10 text-white border-white/10' : 'bg-black/5 hover:bg-black/10 text-slate-900 border-black/10'
+                }`}
               >
-                <X size={24} />
+                <X size={24} className="group-hover:rotate-90 transition-transform duration-500" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white/5">
-              <div className="bg-white rounded-3xl overflow-hidden min-h-[450px] shadow-inner">
+            <div className="flex-1 overflow-y-auto p-10 bg-white">
+              <div className="min-h-[400px]">
                 {selectedMessage.html && selectedMessage.html.length > 0 ? (
                   <iframe
                     title="email-content"
@@ -543,11 +592,27 @@ export default function App() {
                     className="w-full h-[500px] border-none"
                   />
                 ) : (
-                  <div className="p-10 whitespace-pre-line text-slate-800 font-medium leading-relaxed bg-white">
+                  <div className="whitespace-pre-line text-slate-800 font-medium text-lg leading-relaxed">
                     {selectedMessage.text}
                   </div>
                 )}
               </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className={`p-8 border-t flex justify-between items-center transition-colors ${
+              theme === 'dark' ? 'border-white/5 bg-white/[0.01]' : 'border-black/5 bg-black/[0.01]'
+            }`}>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                Contenu chiffré de bout en bout
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl text-sm uppercase tracking-widest transition-all"
+              >
+                Fermer
+              </button>
             </div>
           </motion.div>
         </div>
