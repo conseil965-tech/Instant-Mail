@@ -8,6 +8,7 @@ import { Mail, RefreshCw, Trash2, Copy, Check, ChevronRight, Loader2, X, Chevron
 import { useState, useEffect, useCallback } from 'react';
 import { mailTmService } from './lib/mail-tm';
 import { Account, Message, FAQItem } from './types';
+import { AdSensePlaceholder } from './components/AdSense';
 
 const FAQ_DATA: FAQItem[] = [
   {
@@ -173,172 +174,224 @@ export default function App() {
     <div className="relative min-h-screen bg-bg-dark overflow-hidden">
       {/* Background Video */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover opacity-60 scale-110"
+        <motion.div 
+          initial={{ scale: 1.2, opacity: 0 }}
+          animate={{ scale: 1.1, opacity: 0.7 }}
+          transition={{ duration: 2.5, ease: "easeOut" }}
+          className="w-full h-full"
         >
-          <source src="https://res.cloudinary.com/ensdqbmy/video/upload/v1783680734/Icy_blue_envelope_rotates_spins_202607100944_vrkyfh.mp4" type="video/mp4" />
-          {/* Fallback to original abstract elements if video fails */}
-        </video>
-        <div className="absolute inset-0 bg-bg-dark/40 backdrop-blur-[2px]"></div>
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src="https://res.cloudinary.com/ensdqbmy/video/upload/v1783680734/Icy_blue_envelope_rotates_spins_202607100944_vrkyfh.mp4" type="video/mp4" />
+          </video>
+        </motion.div>
+        
+        {/* Dynamic Overlays for depth and readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-bg-dark/80 via-bg-dark/40 to-bg-dark/90 backdrop-blur-[3px]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]"></div>
       </div>
 
-      {/* Abstract Background Elements (Backups) */}
-      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+      {/* Abstract Background Elements (Backups/Accents) */}
+      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-purple-600/15 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+      <div className="absolute bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[150px] pointer-events-none"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       {/* Navbar */}
-      <nav className="relative z-50 px-10 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <Mail className="text-white" size={24} />
+      <nav className="relative z-50 px-6 md:px-12 py-8 flex justify-between items-center max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
+        >
+          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/40 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+            <Mail className="text-white" size={28} />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">
+          <span className="text-2xl font-black tracking-tighter text-white">
             Instant<span className="text-indigo-400">Mail</span>
           </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-500/10 rounded-full border border-green-500/20">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">Server Active</span>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4"
+        >
+          <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 shadow-lg">
+            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+            <span className="text-[11px] font-black text-green-400 uppercase tracking-[0.2em]">Secure Node 01</span>
           </div>
-        </div>
+        </motion.div>
       </nav>
 
+      {/* Ad: Under Header */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 mb-12">
+        <AdSensePlaceholder type="horizontal" />
+      </div>
+
       {/* Hero Section */}
-      <main className="relative z-10 px-4 py-12 text-center">
+      <main className="relative z-10 px-6 md:px-12 py-12 text-center overflow-visible">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="mb-20"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-white">
-            Your Temporary Address
+          <h1 className="text-5xl md:text-7xl font-black tracking-tightest mb-6 text-white leading-none">
+            Your Private <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Digital Shield</span>
           </h1>
-          <p className="text-text-muted text-lg max-w-2xl mx-auto leading-relaxed">
-            Safe, anonymous, and disposable. Protect your privacy and keep your inbox clean from spam and unwanted tracking.
+          <p className="text-text-muted text-xl max-w-2xl mx-auto leading-relaxed font-medium">
+            Generate instant disposable email addresses. Protect your identity, block tracking, and experience a cleaner internet.
           </p>
+
+          {/* Ad: After First Paragraph */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <AdSensePlaceholder type="horizontal" label="Google AdSense - Priority Placement" />
+          </div>
         </motion.div>
 
-        {/* Main Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="max-w-4xl mx-auto glass rounded-[32px] p-8 md:p-12 shadow-2xl"
-        >
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start text-left">
+          {/* Main content grid col */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-12">
+            {/* Main Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="glass rounded-[48px] p-8 md:p-16 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/5"
+            >
           {/* Email Display */}
           {error && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center justify-center gap-2"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 p-5 bg-red-500/10 border border-red-500/20 rounded-3xl text-red-400 text-sm font-bold flex items-center justify-center gap-3"
             >
-              <AlertCircle size={18} />
+              <AlertCircle size={20} />
               {error}
             </motion.div>
           )}
-          <div className="bg-white/10 border border-white/10 rounded-2xl p-2 mb-8 shadow-inner focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+          
+          <div className="group relative bg-black/40 border border-white/10 rounded-[32px] p-3 mb-10 shadow-2xl transition-all duration-500 hover:border-indigo-500/30 hover:bg-black/60">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-[36px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
             <input
               type="text"
               readOnly
-              value={isLoading ? "Génération de l'adresse..." : account?.address || ""}
-              className="w-full bg-transparent border-none outline-none px-6 py-4 text-2xl font-mono font-medium text-indigo-300 text-center"
-              placeholder="Chargement..."
+              value={isLoading ? "SECURELY GENERATING..." : account?.address || ""}
+              className="relative w-full bg-transparent border-none outline-none px-8 py-6 text-3xl md:text-4xl font-mono font-black text-indigo-200 text-center tracking-tight"
+              placeholder="INITIALIZING..."
             />
           </div>
 
           {/* Action Bar */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
+          <div className="flex flex-wrap justify-center gap-5 mb-16">
             <button
               onClick={copyToClipboard}
               disabled={isLoading || !account}
-              className="flex items-center gap-2 px-6 py-4 bg-white/10 border border-white/10 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all disabled:opacity-50 group shadow-lg"
+              className="flex items-center gap-3 px-8 py-5 bg-indigo-600 rounded-[24px] text-white font-black hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-indigo-600/20"
             >
-              {copied ? <Check size={20} className="text-green-400" /> : <Copy size={20} className="text-indigo-400" />}
-              {copied ? "Copié !" : "Copy Address"}
+              {copied ? <Check size={22} /> : <Copy size={22} />}
+              {copied ? "COPIED" : "COPY ADDRESS"}
             </button>
             <button
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="px-6 py-4 bg-white/10 border border-white/10 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-8 py-5 bg-white/5 border border-white/10 rounded-[24px] text-white font-black hover:bg-white/10 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
             >
-              <RefreshCw size={20} className={`text-indigo-400 ${isRefreshing ? "animate-spin" : ""}`} />
-              Refresh
+              <RefreshCw size={22} className={`${isRefreshing ? "animate-spin" : "text-indigo-400"}`} />
+              REFRESH
             </button>
             <button
               onClick={handleDelete}
               disabled={isLoading}
-              className="px-6 py-4 bg-white/10 border border-white/10 rounded-2xl text-white font-semibold hover:bg-white/20 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-8 py-5 bg-white/5 border border-white/10 rounded-[24px] text-white font-black hover:bg-red-500/10 hover:border-red-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 group"
             >
-              <Trash2 size={20} className="text-red-400" />
-              New Address
+              <Trash2 size={22} className="text-red-400 group-hover:scale-110 transition-transform" />
+              NEW SESSION
             </button>
           </div>
 
+          {/* Ad: Middle of Content */}
+          <div className="mb-16">
+            <AdSensePlaceholder type="rectangle" label="Google AdSense - Engagement Block" />
+          </div>
+
           {/* Inbox Area */}
-          <div className="text-left border-t border-white/10 pt-10">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Mail size={24} className="text-indigo-400" />
-                Recent Messages
+          <div className="text-left border-t border-white/5 pt-16">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-12">
+              <h2 className="text-3xl font-black text-white flex items-center gap-4">
+                <div className="w-1.5 h-8 bg-indigo-500 rounded-full"></div>
+                Incoming Feed
               </h2>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-text-muted">
-                  {retryAfter > 0 ? (
-                    <>Reprise dans <span className="text-red-400 font-mono">{retryAfter}s</span></>
-                  ) : (
-                    <>Auto-refresh <span className="text-primary font-mono">15s</span></>
-                  )}
-                </span>
-                <span className="bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                  {messages.length} Active
-                </span>
+              <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-2xl border border-white/5 shadow-inner">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Status</span>
+                  <span className="text-xs text-white font-mono">
+                    {retryAfter > 0 ? `RETRYING IN ${retryAfter}S` : "LISTENING..."}
+                  </span>
+                </div>
+                <div className="w-px h-8 bg-white/10"></div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Count</span>
+                  <span className="text-xs text-indigo-400 font-black">{messages.length} ACTIVE</span>
+                </div>
               </div>
             </div>
 
-            <div className="min-h-[250px] relative">
+            <div className="min-h-[300px] relative">
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-16 text-text-muted">
-                  <Loader2 size={40} className="animate-spin mb-4 text-primary" />
-                  <p className="font-medium">Configuring your secure workspace...</p>
+                <div className="flex flex-col items-center justify-center py-24 text-text-muted">
+                  <div className="relative w-20 h-20 mb-6">
+                    <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                  <p className="font-black tracking-widest text-xs uppercase">Establishing Encrypted Tunnel</p>
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-text-muted text-center glass rounded-2xl border-dashed">
-                  <Mail size={32} className="mb-4 opacity-20" />
-                  <p className="font-medium italic opacity-50">Your inbox is empty. Waiting for incoming mail...</p>
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-24 text-text-muted text-center bg-white/[0.02] border-2 border-dashed border-white/5 rounded-[32px]"
+                >
+                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                    <Mail size={40} className="opacity-20" />
+                  </div>
+                  <p className="font-bold text-lg text-white/40 italic">Waiting for the first incoming packet...</p>
+                </motion.div>
               ) : (
-                <div className="space-y-4">
-                  {messages.map((msg) => (
+                <div className="grid grid-cols-1 gap-5">
+                  {messages.map((msg, index) => (
                     <motion.div
                       key={msg.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="group flex justify-between items-center bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 p-6 rounded-2xl cursor-pointer transition-all shadow-lg"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="group relative flex justify-between items-center bg-white/[0.03] border border-white/5 hover:bg-white/10 hover:border-white/10 p-8 rounded-[32px] cursor-pointer transition-all duration-500 shadow-xl overflow-hidden"
                       onClick={() => openMessage(msg.id)}
                     >
-                      <div className="flex items-center gap-6">
-                        <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold border border-primary/20">
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="flex items-center gap-8">
+                        <div className="w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center text-indigo-300 font-black text-2xl border border-indigo-500/20 shadow-lg">
                           {msg.from.name ? msg.from.name[0].toUpperCase() : 'M'}
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="font-bold text-white text-lg">
+                        <div className="flex flex-col gap-2">
+                          <span className="font-black text-white text-xl tracking-tight group-hover:text-indigo-300 transition-colors">
                             {msg.subject || '(No Subject)'}
                           </span>
-                          <span className="text-sm text-text-muted">
-                            From: <span className="text-indigo-300">{msg.from.address}</span>
+                          <span className="text-sm font-medium text-text-muted">
+                            <span className="opacity-50">From:</span> <span className="text-indigo-400/70">{msg.from.address}</span>
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                        View Message
-                        <ChevronRight size={18} />
+                      <div className="flex items-center gap-3 text-indigo-400 font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
+                        Decrypt
+                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                          <ChevronRight size={20} />
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -347,54 +400,102 @@ export default function App() {
             </div>
           </div>
         </motion.div>
-      </main>
+      </div>
 
-      {/* FAQ Section */}
-      <section className="relative z-10 max-w-3xl mx-auto py-24 px-6">
-        <h2 className="text-3xl font-extrabold text-center text-white mb-12 tracking-tight">Frequently Asked Questions</h2>
-        <div className="space-y-4">
+      {/* Sidebar Ad (Visible only on desktop) */}
+      <aside className="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-12">
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="space-y-8"
+        >
+          <div className="bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-2xl">
+            <h4 className="text-xs font-black text-text-muted uppercase tracking-[0.3em] mb-6">Security Partner</h4>
+            <AdSensePlaceholder type="vertical" label="Google AdSense - Sidebar Premium" />
+          </div>
+          <AdSensePlaceholder type="rectangle" label="Google AdSense - Sidebar Secondary" />
+        </motion.div>
+      </aside>
+    </div>
+  </main>
+
+  {/* Ad: Before Footer */}
+  <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
+    <AdSensePlaceholder type="horizontal" label="Google AdSense - Bottom" />
+  </div>
+
+  {/* FAQ Section */}
+      <section className="relative z-10 max-w-4xl mx-auto py-32 px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tightest uppercase">Common Inquiries</h2>
+          <p className="text-text-muted font-medium">Everything you need to know about our secure temporary mail service.</p>
+        </motion.div>
+        
+        <div className="space-y-6">
           {FAQ_DATA.map((item, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className={`glass rounded-2xl overflow-hidden transition-all duration-500 ${
-                activeFaq === idx ? 'ring-1 ring-primary/50' : ''
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className={`glass rounded-[32px] overflow-hidden transition-all duration-500 border border-white/5 ${
+                activeFaq === idx ? 'ring-2 ring-indigo-500/30 bg-white/[0.07]' : 'hover:bg-white/[0.03]'
               }`}
             >
               <button
                 onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                className="w-full flex justify-between items-center p-6 text-left font-bold text-white hover:bg-white/5 transition-colors"
+                className="w-full flex justify-between items-center p-8 md:p-10 text-left font-black text-white transition-colors group"
               >
-                {item.question}
-                <ChevronDown
-                  size={20}
-                  className={`text-text-muted transition-transform duration-300 ${
-                    activeFaq === idx ? 'rotate-180 text-primary' : ''
-                  }`}
-                />
+                <span className="text-lg md:text-xl tracking-tight group-hover:text-indigo-300 transition-colors">{item.question}</span>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+                  activeFaq === idx ? 'bg-indigo-500 text-white rotate-180' : 'bg-white/5 text-text-muted'
+                }`}>
+                  <ChevronDown size={20} />
+                </div>
               </button>
               <div
                 className={`transition-all duration-500 ease-in-out overflow-hidden ${
-                  activeFaq === idx ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  activeFaq === idx ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
                 }`}
               >
-                <div className="p-6 pt-0 text-text-muted text-sm leading-relaxed border-t border-white/5">
+                <div className="p-8 md:p-10 pt-0 text-text-muted text-lg leading-relaxed border-t border-white/5 font-medium">
                   {item.answer}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 px-10 py-6 flex justify-between items-center text-[10px] text-slate-500 border-t border-white/5 bg-black/20 backdrop-blur-md">
-        <div className="flex gap-6 uppercase tracking-widest font-bold">
-          <span className="hover:text-white transition-colors cursor-default underline decoration-primary/50 underline-offset-4">Encrypted Channel</span>
-          <span className="hover:text-white transition-colors cursor-default underline decoration-primary/50 underline-offset-4">Privacy Guaranteed</span>
+      <footer className="relative z-10 px-6 md:px-12 py-12 flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] text-slate-500 border-t border-white/5 bg-black/40 backdrop-blur-3xl">
+        <div className="flex flex-wrap justify-center gap-8 uppercase tracking-[0.3em] font-black">
+          <span className="hover:text-white transition-colors cursor-default flex items-center gap-2">
+            <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
+            AES-256 Encryption
+          </span>
+          <span className="hover:text-white transition-colors cursor-default flex items-center gap-2">
+            <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
+            Zero-Log Policy
+          </span>
+          <span className="hover:text-white transition-colors cursor-default flex items-center gap-2">
+            <div className="w-1 h-1 bg-indigo-500 rounded-full"></div>
+            GDPR Compliant
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
-          <span className="uppercase tracking-widest font-bold">EST. 2024 — INSTANTMAIL LABS</span>
+        <div className="flex flex-col items-center md:items-end gap-2">
+          <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+            <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.8)] animate-pulse"></div>
+            <span className="uppercase tracking-[0.2em] font-black text-white">System Status: Optimal</span>
+          </div>
+          <span className="uppercase tracking-widest font-bold opacity-30 mt-2">© 2026 INSTANTMAIL LABS — QUANTUM PRIVACY ENGINE</span>
         </div>
       </footer>
 
