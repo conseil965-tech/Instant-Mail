@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Download, FileText, Layout, User, Briefcase, GraduationCap, Mail, X, Trash2, Sparkles, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AdSensePlaceholder } from './AdSense';
+
 // @ts-ignore - html2pdf.js doesn't have official types
 import html2pdf from 'html2pdf.js';
 
@@ -631,7 +631,7 @@ export function CVGenerator() {
               </ul>
             </div>
 
-            <AdSensePlaceholder type="vertical" />
+
           </div>
         </div>
 

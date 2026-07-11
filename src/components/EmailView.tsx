@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Account, Message, FAQItem } from '../types';
-import { AdSensePlaceholder } from './AdSense';
+
 
 const FAQ_DATA: FAQItem[] = [
   {
@@ -242,12 +242,12 @@ export function EmailView({
               </div>
             </div>
             
-            <AdSensePlaceholder type="horizontal" label="Google AdSense - In-Feed Premium" />
+
           </div>
 
           <aside className="lg:col-span-4 space-y-8 sm:space-y-10">
             <div className="lg:sticky lg:top-10 space-y-8 sm:space-y-10">
-              <AdSensePlaceholder type="vertical" label="Google AdSense - Sidebar" />
+
               <div className={`border p-6 sm:p-8 rounded-3xl space-y-4 sm:space-y-6 backdrop-blur-md transition-all ${
                 theme === 'dark' ? 'bg-white/[0.02] border-white/5' : 'bg-black/[0.02] border-black/5'
               }`}>

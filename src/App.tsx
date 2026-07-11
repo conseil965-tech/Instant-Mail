@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback } from 'react';
 import { mailTmService } from './lib/mail-tm';
 import { Account, Message } from './types';
-import { AdSensePlaceholder } from './components/AdSense';
 import { EmailView } from './components/EmailView';
 import { CVGenerator } from './components/CVGenerator';
 
@@ -245,13 +244,6 @@ export default function App() {
           </div>
         </div>
       </header>
-
-      {/* Ad: Top (Only on Emails view) */}
-      {view === 'emails' && (
-        <div className="relative z-10 max-w-6xl mx-auto px-6 mb-16">
-          <AdSensePlaceholder type="horizontal" />
-        </div>
-      )}
 
       {/* Dynamic View Content */}
       <AnimatePresence mode="wait">
