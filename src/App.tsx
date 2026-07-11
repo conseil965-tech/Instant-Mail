@@ -171,7 +171,7 @@ export default function App() {
       <header className="relative z-50 max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex justify-between items-center">
         <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => setView('emails')}>
           <img 
-            src="/favicon.png" 
+            src="/logo_pro.jpg" 
             alt="Mails.org Logo" 
             className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-2xl shadow-blue-500/20"
             referrerPolicy="no-referrer"
