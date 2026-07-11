@@ -1,15 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #6366f1; /* indigo-500 */
-  --color-primary-dark: #4f46e5; /* indigo-600 */
-  --color-bg-dark: #0c1222;
+  --font-serif: "Lora", Georgia, Cambria, "Times New Roman", Times, serif;
+  --color-primary: #3b82f6; /* blue-500 */
+  --color-primary-dark: #2563eb; /* blue-600 */
+  --color-bg-dark: #0a0c10;
   --color-glass: rgba(255, 255, 255, 0.05);
   --color-glass-border: rgba(255, 255, 255, 0.1);
-  --color-text-main: #f8fafc; /* slate-50 */
-  --color-text-muted: #94a3b8; /* slate-400 */
+  
+  /* Redefine palette to hex to avoid oklch errors with motion */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+  
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  
+  --color-green-500: #22c55e;
+  --color-amber-500: #f59e0b;
+  
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
 }
 
 @layer base {
