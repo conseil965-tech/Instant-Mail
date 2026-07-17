@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Account, Message, FAQItem } from '../types';
+import { AdSense } from './AdSense';
 
 
 const FAQ_DATA: FAQItem[] = [
@@ -272,6 +273,12 @@ export function EmailView({
           </aside>
         </div>
 
+        {/* CONTENT ADS */}
+        <div className="mb-16">
+          <AdSense slot="8882345678" format="horizontal" theme={theme} />
+        </div>
+        {/* CONTENT ADS END */}
+
         {/* FAQ Section */}
         <section className="mb-32">
           <motion.div 
@@ -328,6 +335,13 @@ export function EmailView({
               </motion.div>
             ))}
           </div>
+
+          {/* CONTENT ADS */}
+          {/* SEO AD SLOT */}
+          <div className="max-w-4xl mx-auto mt-12">
+            <AdSense slot="8883456789" format="rectangle" theme={theme} />
+          </div>
+          {/* SEO AD SLOT END */}
         </section>
       </main>
     </>

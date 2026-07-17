@@ -13,6 +13,7 @@ import { mailTmService } from './lib/mail-tm';
 import { Account, Message } from './types';
 import { EmailView } from './components/EmailView';
 import { CVGenerator } from './components/CVGenerator';
+import { AdSense } from './components/AdSense';
 
 export default function App() {
   const [view, setView] = useState<'emails' | 'cv'>('emails');
@@ -245,6 +246,12 @@ export default function App() {
         </div>
       </header>
 
+      {/* HEADER ADS */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mb-6">
+        <AdSense slot="8881234567" format="horizontal" theme={theme} />
+      </div>
+      {/* HEADER ADS END */}
+
       {/* Dynamic View Content */}
       <AnimatePresence mode="wait">
         {view === 'emails' ? (
@@ -283,6 +290,12 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* FOOTER ADS */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mt-12 mb-6">
+        <AdSense slot="8884567890" format="horizontal" theme={theme} />
+      </div>
+      {/* FOOTER ADS END */}
 
       {/* Footer */}
       <footer className={`relative z-10 max-w-6xl mx-auto px-6 py-12 border-t flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] font-bold uppercase tracking-[0.2em] transition-all ${
